@@ -15,8 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/ericchiang/k8s"
 	corev1 "github.com/ericchiang/k8s/apis/core/v1"
-	"github.com/inconshreveable/log15"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 var ipTagKey = "voice"
@@ -26,7 +26,7 @@ var nodeVal = "proxy"
 
 var testMode bool
 
-var log log15.Logger
+var log *zap.SugaredLogger
 
 func init() {
 	flag.BoolVar(&testMode, "test", false, "test mode will not update associations")
@@ -34,31 +34,31 @@ func init() {
 	flag.StringVar(&ipTagVal, "ipTagVal", "proxy", "key value by which potential Elastic IPs will be tagged")
 	flag.StringVar(&nodeKey, "nodeKey", "voice", "key name by which potential Nodes will be tagged")
 	flag.StringVar(&nodeVal, "nodeVal", "proxy", "key value by which potential Nodes will be tagged")
-
-	log = log15.New()
 }
 
 func main() {
 	flag.Parse()
 
+	logger, err := zap.NewProduction()
+	if err != nil {
+		panic("failed to instantiate logger: " + err.Error())
+	}
+	log = logger.Sugar()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
-		log.Crit("AWS_ACCESS_KEY_ID must be defined")
-		os.Exit(1)
+		log.Fatal("AWS_ACCESS_KEY_ID must be defined")
 	}
 	if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
-		log.Crit("AWS_SECRET_ACCESS_KEY must be defined")
-		os.Exit(1)
+		log.Fatal("AWS_SECRET_ACCESS_KEY must be defined")
 	}
 	if os.Getenv("AWS_REGION") == "" {
-		log.Crit("AWS_REGION must be defined")
-		os.Exit(1)
+		log.Fatal("AWS_REGION must be defined")
 	}
 	if os.Getenv("GROUP") == "" {
-		log.Crit("GROUP must be defined")
-		os.Exit(1)
+		log.Fatal("GROUP must be defined")
 	}
 	if os.Getenv("IP_TAG_KEY") != "" {
 		ipTagKey = os.Getenv("IP_TAG_KEY")
@@ -76,8 +76,7 @@ func main() {
 	for ctx.Err() == nil {
 		kc, err := k8s.NewInClusterClient()
 		if err != nil {
-			log.Crit("failed to connect to kubernetes API server", "error", err)
-			os.Exit(1)
+			log.Fatalw("failed to connect to kubernetes API server", "error", err)
 		}
 
 		m := &Manager{
@@ -86,9 +85,9 @@ func main() {
 
 		err = m.watch(ctx)
 		if errors.Cause(err) == io.EOF {
-			log.Debug("gRPC connection timed out")
+			log.Debugw("gRPC connection timed out")
 		} else {
-			log.Warn("watch exited", "error", err)
+			log.Warnw("watch exited", "error", err)
 		}
 	}
 	os.Exit(1)
@@ -149,7 +148,7 @@ func (m *Manager) associateIP(ctx context.Context, instanceID string, ipID strin
 	}
 
 	if testMode {
-		log.Debug(fmt.Sprintf("TEST MODE: not associating node %s, interface %s with IP %s", instanceID, interfaceID, ipID))
+		log.Debugf(fmt.Sprintf("TEST MODE: not associating node %s, interface %s with IP %s", instanceID, interfaceID, ipID))
 		return nil
 	}
 
@@ -280,7 +279,7 @@ func (m *Manager) reconcile(ctx context.Context) error {
 	for _, n := range nodeList {
 		id, err := instanceID(n)
 		if err != nil {
-			log.Warn("failed to get instanceID for node", "node", n.String())
+			log.Warnw("failed to get instanceID for node", "node", n.String())
 			continue
 		}
 
@@ -292,7 +291,7 @@ func (m *Manager) reconcile(ctx context.Context) error {
 			}
 		}
 		if !matched {
-			log.Debug(fmt.Sprintf("Node %s is available", n.GetMetadata().GetName()))
+			log.Debugf(fmt.Sprintf("Node %s is available", n.GetMetadata().GetName()))
 			availableNodes = append(availableNodes, n)
 		}
 	}
@@ -308,7 +307,7 @@ func (m *Manager) reconcile(ctx context.Context) error {
 			return errors.Errorf("no IP addresses available for %d nodes", len(availableNodes))
 		}
 
-		log.Info(fmt.Sprintf("associating node %s with IP %s", id, aws.StringValue(availableIPs[0].PublicIp)))
+		log.Infof("associating node %s with IP %s", id, aws.StringValue(availableIPs[0].PublicIp))
 		if err = m.associateIP(ctx, id, aws.StringValue(availableIPs[0].AllocationId)); err != nil {
 			return errors.Wrapf(err, "failed to associate IP %s with node %s", aws.StringValue(availableIPs[0].PublicIp), id)
 		}
@@ -316,7 +315,7 @@ func (m *Manager) reconcile(ctx context.Context) error {
 		log.Info("waiting 1 minute following association")
 		time.Sleep(time.Minute)
 
-		log.Info(fmt.Sprintf("rebooting node %s after assigning IP %s", id, aws.StringValue(availableIPs[0].PublicIp)))
+		log.Infof("rebooting node %s after assigning IP %s", id, aws.StringValue(availableIPs[0].PublicIp))
 		return errors.Wrapf(m.rebootNode(ctx, id), "failed to reboot node %s", id)
 	}
 
