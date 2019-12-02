@@ -23,8 +23,8 @@ changelog:
        - '^test:'
 
 dockers:
-   - image_templates: cycoresystems/ipassign
-      - "cycoresystems/ipassign:{{ .Tag }}"
-      - "cycoresystems/ipassign:v{{ .Major }}"
-      - "cycoresystems/ipassign:v{{ .Major }}.{{ .Minor }}"
-      - "cycoresystems/ipassign:latest"
+   - image_templates:
+      - 'cycoresystems/ipassign:{{ .Tag }}'
+      - 'cycoresystems/ipassign:v{{ .Major }}'
+      - 'cycoresystems/ipassign:v{{ .Major }}.{{ .Minor }}'
+      - 'cycoresystems/ipassign:latest'
