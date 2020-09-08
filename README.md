@@ -1,12 +1,17 @@
 # ipassign
 
-`ipassign` binds a given set of kubernetes Nodes to a given set of AWS Elastic IP
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/CyCoreSystems/ipassign)](https://pkg.go.dev/github.com/CyCoreSystems/ipassign)
+
+`ipassign` binds a given set of kubernetes Nodes to a given set of Public IP
 addresses.  Both sets are determined by tags, where the Nodes use kubernetes
-labels, and the Elastic IPs are defined by AWS resource Tags.
+labels, and the Public IPs use the cloud provider's selection mechanism (labels
+or tags).
 
-Elastic IPs are additionally selected by a `GROUP` tag.  This is to facilitate
-deployment groups while maintaining the same resource tags otherwise.
+In AWS, Elastic IPs are additionally selected by a `GROUP` tag.  This is to facilitate
+deployment groups while maintaining the same resource tags otherwise.  For GCP,
+this kind of layering is usually applied through the use of differing deployment
+zones or differing project IDs.
 
-This is meant more as an example than a direct-use utility, as the specifics of
-your deployment may vary greatly.
+This utility is somewhat opinionated, but the backends are now modular, allowing
+you to create more flexible options, should you need them.
 
