@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/CyCoreSystems/ipassign/internal/annotation"
 	"github.com/CyCoreSystems/ipassign/internal/constants"
@@ -31,6 +32,8 @@ var cloud = "aws"
 var testMode bool
 
 var log *zap.SugaredLogger
+
+var watchLoopShortCycleBuffer = 2 * time.Second
 
 func init() {
 	flag.BoolVar(&testMode, "test", false, "test mode will not update associations")
@@ -107,6 +110,10 @@ func main() {
 			log.Debugw("gRPC connection timed out")
 		} else {
 			log.Warnw("watch exited", "error", err)
+		}
+
+		if ctx.Err() == nil {
+			time.Sleep(watchLoopShortCycleBuffer)
 		}
 	}
 	os.Exit(1)
