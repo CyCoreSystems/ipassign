@@ -15,3 +15,9 @@ zones or differing project IDs.
 This utility is somewhat opinionated, but the backends are now modular, allowing
 you to create more flexible options, should you need them.
 
+## RBAC
+
+Because the Node object is not a namespaced resource, a simple RoleBinding is
+not sufficient.  You must use ClusterRole and ClusterRoleBindings.
+
+Please see the [example](ipassign.yaml).

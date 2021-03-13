@@ -1,0 +1,75 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: node-manager
+rules:
+  - apiGroups: [""] # "" indicates the core API group
+    resources: ["nodes"]
+    verbs: ["get", "watch", "list", "update", "patch"]
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ipassign
+subjects:
+  - kind: ServiceAccount
+    name: ipassign
+    namespace: voip
+roleRef:
+  kind: ClusterRole
+  name: node-manager
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voip
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ipassign
+  namespace: voip
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ipassign
+  namespace: voip
+  labels:
+    component: voip
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: voip
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        component: voip
+    spec:
+      serviceAccountName: ipassign
+      containers:
+      - name: ipassign
+        image: cycoresystems/ipassign:v0.1.1
+        env:
+        - name: IP_TAG_KEY
+          value: voip
+        - name: IP_TAG_VAL
+          value: external
+        - name: NODE_KEY
+          value: voip
+        - name: NODE_VAL
+          value: proxy
+        - name: CLOUD
+          value: gcp
