@@ -76,7 +76,7 @@ func main() {
 		cloud = os.Getenv("CLOUD")
 	}
 	if os.Getenv("ZONE") != "" {
-		cloud = os.Getenv("ZONE")
+		zone = os.Getenv("ZONE")
 	}
 
 	var cloudAssigner ipam.Assigner
