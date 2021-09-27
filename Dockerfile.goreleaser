@@ -1,0 +1,3 @@
+FROM gcr.io/distroless/base
+COPY ipassign /go/bin/ipassign
+ENTRYPOINT ["/go/bin/ipassign"]
