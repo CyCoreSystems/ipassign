@@ -2,6 +2,8 @@
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/CyCoreSystems/ipassign)](https://pkg.go.dev/github.com/CyCoreSystems/ipassign)
 
+This package is published as a container to `ghcr.io/cycoresystems/ipassign`.
+
 `ipassign` binds a given set of kubernetes Nodes to a given set of Public IP
 addresses.  Both sets are determined by tags, where the Nodes use kubernetes
 labels, and the Public IPs use the cloud provider's selection mechanism (labels

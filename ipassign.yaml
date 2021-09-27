@@ -61,7 +61,7 @@ spec:
       serviceAccountName: ipassign
       containers:
       - name: ipassign
-        image: cycoresystems/ipassign:v0.1.1
+        image: ghcr.io/cycoresystems/ipassign:v0.1.1
         env:
         - name: IP_TAG_KEY
           value: voip
