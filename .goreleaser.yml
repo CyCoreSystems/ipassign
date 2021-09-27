@@ -30,3 +30,7 @@ dockers:
       - 'cycoresystems/ipassign:v{{ .Major }}'
       - 'cycoresystems/ipassign:v{{ .Major }}.{{ .Minor }}'
       - 'cycoresystems/ipassign:latest'
+      - 'ghcr.io/cycoresystems/ipassign:{{ .Tag }}'
+      - 'ghcr.io/cycoresystems/ipassign:v{{ .Major }}'
+      - 'ghcr.io/cycoresystems/ipassign:v{{ .Major }}.{{ .Minor }}'
+      - 'ghcr.io/cycoresystems/ipassign:latest'
