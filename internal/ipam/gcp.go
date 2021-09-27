@@ -88,7 +88,7 @@ func (a *gcpAssigner) Assign(ctx context.Context, nodeToAssign v1.Node, ann anno
 func (a *gcpAssigner) nextAvailableIP(svc *gcpv1.Service) (string, error) {
 	list, err := svc.Addresses.List(a.project, a.zone).Filter(fmt.Sprintf(`%s = %s`, a.ipTagKey, a.ipTagVal)).Do()
 	if err != nil {
-		return "", eris.New("failed to get IP list")
+		return "", eris.Wrapf(err, "failed to get IP list from project %q, zone %q matching labels %q = %q", a.project, a.zone, a.ipTagKey, a.ipTagVal)
 	}
 
 	for _, addr := range list.Items {
