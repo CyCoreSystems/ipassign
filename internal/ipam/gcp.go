@@ -29,16 +29,19 @@ type gcpAssigner struct {
 }
 
 // NewGCPAssigner returns a new GCP IP address Assigner
-func NewGCPAssigner() (Assigner, error) {
+func NewGCPAssigner(zone string) (Assigner, error) {
 	mc := metadata.NewClient(http.DefaultClient)
 
 	project, err := mc.ProjectID()
 	if err != nil {
 		return nil, eris.Wrap(err, "failed to get project ID from metadata server")
 	}
-	zone, err := mc.Zone()
-	if err != nil {
-		return nil, eris.Wrap(err, "failed to retrieve zone from metadata server")
+
+	if zone == "" {
+		zone, err = mc.Zone()
+		if err != nil {
+			return nil, eris.Wrap(err, "failed to retrieve zone from metadata server")
+		}
 	}
 
 	return &gcpAssigner{

@@ -27,6 +27,7 @@ var ipTagKey = "voice"
 var ipTagVal = "proxy"
 var nodeKey = "voice"
 var nodeVal = "proxy"
+var zone = ""
 
 var cloud = "aws"
 
@@ -44,6 +45,7 @@ func init() {
 	flag.StringVar(&nodeVal, "nodeVal", "proxy", "key value by which potential Nodes will be tagged")
 
 	flag.StringVar(&cloud, "cloud", "aws", "cloud platform: aws, gcp")
+	flag.StringVar(&zone, "zone", "", "override zone setting (e.g. for GCP global zone)")
 }
 
 func main() {
@@ -73,6 +75,9 @@ func main() {
 	if os.Getenv("CLOUD") != "" {
 		cloud = os.Getenv("CLOUD")
 	}
+	if os.Getenv("ZONE") != "" {
+		cloud = os.Getenv("ZONE")
+	}
 
 	var cloudAssigner ipam.Assigner
 	switch cloud {
@@ -82,7 +87,7 @@ func main() {
 			log.Fatalw("failed to create AWS IP assigner", "error", err)
 		}
 	case "gcp":
-		cloudAssigner, err = ipam.NewGCPAssigner()
+		cloudAssigner, err = ipam.NewGCPAssigner(zone)
 		if err != nil {
 			log.Fatalw("failed to create GCP IP assigner")
 		}
